@@ -1,26 +1,25 @@
-
-import { db } from '../../lib/firebase';
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { db } from '../../../lib/firebase';
+import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore";
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { nome, quantidade } = req.body;
-    try {
-      const docRef = await addDoc(collection(db, "items"), { nome, quantidade });
-      res.status(201).json({ id: docRef.id, message: 'Item criado com sucesso!' });
-    } catch (error) {
-      res.status(500).json({ error: "Erro ao criar item." });
-    }
+    await addDoc(collection(db, "items"), { nome, quantidade });
+    res.status(204).end(); 
   } else if (req.method === 'GET') {
-    try {
-      const querySnapshot = await getDocs(collection(db, "items"));
-      const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      res.status(200).json(items);
-    } catch (error) {
-      res.status(500).json({ error: "Erro ao buscar itens." });
+    const querySnapshot = await getDocs(collection(db, "items"));
+    const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.status(200).json(items);
+  } else if (req.method === 'DELETE') {
+    const { id } = req.body;
+    if (id) {
+      await deleteDoc(doc(db, "items", id));
     }
+    res.status(204).end(); 
   } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader('Allow', ['GET', 'POST', 'DELETE']);
+    res.status(405).end();
   }
 }
+
+  
